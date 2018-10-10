@@ -12,19 +12,19 @@ class command(models.Model):
         ("W", "Weel"),
     )
     name = models.CharField(max_length=40,null=False,blank=False)
-    tag = models.CharField(choices=TAG_CHOICES,null=False,blank=False)
-    arg = models.IntegerField()
+    tag = models.CharField(choices=TAG_CHOICES,max_length=4,null=False,blank=False)
+    arg = models.IntegerField(unique=True,blank=False,null=False)
 
 class person(models.Model):
-    first_name = models.CharField(max_length=40)
-    last_name = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=40,null=False,blank=False)
+    last_name = models.CharField(max_length=50,null=False,blank=False)
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
                                  message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
-    phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=False)  # validators should be a list
+    phone_number = models.CharField(validators=[phone_regex], max_length=17,null=False,blank=False)  # validators should be a list
     login_status = models.BooleanField(default=False)
     last_activity = models.BigIntegerField(default=0)
 
-    age = models.IntegerField()
+    age = models.IntegerField(null=True,blank=True)
     # and so on
 
     class Meta:

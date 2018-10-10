@@ -21,7 +21,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '@j&^@=4t9r&^!@9dq_!_pga=y63#(5oj9tqdk3kvg3r%4ux$d#'
-AUTH_USER_MODEL = 'website.person'
+
+AUTH_TIME_DELTA = 15*60
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

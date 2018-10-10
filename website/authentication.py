@@ -5,10 +5,11 @@ from rest_framework import exceptions
 from .token import decodeToken,generateToken
 from time import time
 import json
+import codecs
 from django.http import HttpResponse
+from AILab.settings import AUTH_TIME_DELTA as timeDelta
 
 
-timeDelta = 15*60
 
 class PersonAuthentication(authentication.BaseAuthentication):
 
@@ -45,12 +46,15 @@ def decode_and_check_auth_token(token):
     phone_number = data['phone_number']
     return data
 
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def obtain_token(request):
     try:
-        first_name = request.data['first_name']
-        last_name = request.data['last_name']
-        phone_number = request.data['phone_number']
+        data=json.loads(codecs.decode(request.body,'utf-8'))
+        first_name = data['first_name']
+        last_name = data['last_name']
+        phone_number = data['phone_number']
         user = person.objects.get(first_name=first_name, last_name=last_name,
                               phone_number=phone_number)
     except:
@@ -62,26 +66,30 @@ def obtain_token(request):
                             content_type='application/json; charset=utf8')
     else:
         data={'first_name':first_name,'last_name':last_name,'phone_number':phone_number}
-        token = generateToken(data)
-        user.login_status=True
-        user.last_activity=time()
-        user.save()
         for another_user in person.objects.filter(login_status=True):
             another_user.login_status=False
             another_user.save()
 
+        token = generateToken(data)
+        user.login_status = True
+        user.last_activity = time()
+        user.save()
+
         return HttpResponse(json.dumps({'token': token}), status=200,
                         content_type='application/json; charset=utf8')
 
+@csrf_exempt
 def verify_token(request):
     try:
-        token = request.data['token']
+        token = json.loads(codecs.decode(request.body,'utf-8'))['token']
         data = decode_and_check_auth_token(token)
         user=person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
                            phone_number=data['phone_number'])
     except:
         return HttpResponse(status=400,content_type='application/json; charset=utf8')
     if user.login_status==True and user.last_activity+timeDelta>time():
+        user.last_activity = time()
+        user.save()
         return HttpResponse(status=200, content_type='application/json; charset=utf8')
     else:
         if user.login_status==True:
@@ -90,3 +98,18 @@ def verify_token(request):
         return HttpResponse(status=400,content_type='application/json; charset=utf8')
 
 
+@csrf_exempt
+def remove_token(request):
+    try:
+        token = json.loads(codecs.decode(request.body,'utf-8'))['token']
+        data = decode_and_check_auth_token(token)
+        user=person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
+                           phone_number=data['phone_number'])
+    except:
+        return HttpResponse(status=400,content_type='application/json; charset=utf8')
+
+
+    user.login_status=False;
+    user.last_activity = time()
+    user.save()
+    return HttpResponse(json.dumps({"message":"logout complete"}),status=200, content_type='application/json; charset=utf8')
