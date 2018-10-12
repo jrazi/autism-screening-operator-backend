@@ -8,6 +8,8 @@ class IsLogin(permissions.BasePermission):
 
     def has_permission(self, request, view):
 
+        if (request.user==None):
+            return False
         if (request.user.last_activity+timeDelta > time() and request.user.login_status==True):
             return True
 

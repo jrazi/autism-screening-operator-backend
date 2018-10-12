@@ -8,6 +8,7 @@ import json
 import codecs
 from django.http import HttpResponse
 from AILab.settings import AUTH_TIME_DELTA as timeDelta
+from website.serializer import person_serializer
 
 
 
@@ -16,7 +17,7 @@ class PersonAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         token = request.META.get('HTTP_AUTH')
         if token == None :
-            return None
+            return (None,None)
 
         try :
             data = decode_and_check_auth_token(token)
@@ -55,11 +56,22 @@ def obtain_token(request):
         first_name = data['first_name']
         last_name = data['last_name']
         phone_number = data['phone_number']
-        user = person.objects.get(first_name=first_name, last_name=last_name,
-                              phone_number=phone_number)
     except:
         return HttpResponse(json.dumps({'errors': 'bad input'}), status=400,
                             content_type='application/json; charset=utf8')
+
+    try:
+        user = person.objects.get(first_name=first_name, last_name=last_name,
+                                  phone_number=phone_number)
+    except:
+        s = person_serializer(data=request.data)
+        if s.is_valid():
+            s.save()
+            user = person.objects.get(first_name=first_name, last_name=last_name,
+                                      phone_number=phone_number)
+        else:
+            return HttpResponse(json.dumps(s.errors), status=400, content_type='application/json; charset=utf8')
+
 
     if (len(person.objects.filter(login_status=True , last_activity__gt=time()-timeDelta))):
         return HttpResponse(json.dumps({'errors': 'another user loged in'}), status=400,

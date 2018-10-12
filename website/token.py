@@ -1,5 +1,4 @@
 import jwt
-from random import random
 from AILab.settings import SECRET_KEY
 
 

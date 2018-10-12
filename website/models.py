@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+from time import time
 
 # Create your models here.
 
@@ -22,7 +23,7 @@ class person(models.Model):
                                  message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
     phone_number = models.CharField(validators=[phone_regex], max_length=17,null=False,blank=False)  # validators should be a list
     login_status = models.BooleanField(default=False)
-    last_activity = models.BigIntegerField(default=0)
+    last_activity = models.BigIntegerField(default=lambda:time())
 
     age = models.IntegerField(null=True,blank=True)
     # and so on

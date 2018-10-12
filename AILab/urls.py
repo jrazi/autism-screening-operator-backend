@@ -20,5 +20,5 @@ from website import urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/',include(urls),name='Site'),
+    path('',include(urls),name='Site'),
 ]

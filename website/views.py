@@ -4,12 +4,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route,detail_route
 from website import serializer,models
 from website.permissions import IsLogin
-from time import time
-from datetime import datetime
-from django.shortcuts import get_object_or_404
 import json
 from django.http import HttpResponse
-from itertools import chain
+
 
 
 class UserProfile(viewsets.GenericViewSet):
