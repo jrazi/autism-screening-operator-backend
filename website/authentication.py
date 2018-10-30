@@ -61,34 +61,35 @@ def obtain_token(request):
                             content_type='application/json; charset=utf8')
 
     try:
+        login_person = person.objects.get(login_status=True , last_activity__gt=time()-timeDelta)
+    except:
+        pass
+    else:
+        if not (login_person.first_name==first_name and login_person.last_name==last_name and login_person.phone_number==phone_number):
+            return HttpResponse(json.dumps({'errors': 'another user loged in'}), status=400,
+                                content_type='application/json; charset=utf8')
+
+    try:
         user = person.objects.get(first_name=first_name, last_name=last_name,
                                   phone_number=phone_number)
     except:
-        s = person_serializer(data=request.data)
-        if s.is_valid():
-            s.save()
-            user = person.objects.get(first_name=first_name, last_name=last_name,
-                                      phone_number=phone_number)
-        else:
-            return HttpResponse(json.dumps(s.errors), status=400, content_type='application/json; charset=utf8')
+
+        return HttpResponse(json.dumps({"errors":"user not exist"}), status=401, content_type='application/json; charset=utf8')
 
 
-    if (len(person.objects.filter(login_status=True , last_activity__gt=time()-timeDelta))):
-        return HttpResponse(json.dumps({'errors': 'another user loged in'}), status=400,
-                            content_type='application/json; charset=utf8')
-    else:
-        data={'first_name':first_name,'last_name':last_name,'phone_number':phone_number}
-        for another_user in person.objects.filter(login_status=True):
-            another_user.login_status=False
-            another_user.save()
 
-        token = generateToken(data)
-        user.login_status = True
-        user.last_activity = time()
-        user.save()
+    data={'first_name':first_name,'last_name':last_name,'phone_number':phone_number}
+    for another_user in person.objects.filter(login_status=True):
+        another_user.login_status=False
+        another_user.save()
 
-        return HttpResponse(json.dumps({'token': token}), status=200,
-                        content_type='application/json; charset=utf8')
+    token = generateToken(data)
+    user.login_status = True
+    user.last_activity = time()
+    user.save()
+
+    return HttpResponse(json.dumps({'token': token}), status=200,
+                    content_type='application/json; charset=utf8')
 
 @csrf_exempt
 def verify_token(request):

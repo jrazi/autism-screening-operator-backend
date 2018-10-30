@@ -8,4 +8,4 @@ from django.test import TestCase
 # mysql
 # apache server
 # front end
-# static serve
+# static server

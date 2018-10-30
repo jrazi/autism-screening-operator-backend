@@ -62,6 +62,7 @@ class Commands(viewsets.GenericViewSet):
     @detail_route(methods=['get'],permission_classes=[IsLogin]) #auth
     def perform(self,request,pk=None):
         obj = self.queryset.get(pk=pk)
+        print(obj.arg);
         # do some thing with the code
         return HttpResponse(status=200,
                             content_type='application/json; charset=utf8')

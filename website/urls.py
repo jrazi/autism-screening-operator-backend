@@ -14,3 +14,4 @@ urlpatterns = [
     url(r'^logout/', remove_token),
     url('^', include(router.urls))
 ]
+
