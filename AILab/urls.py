@@ -15,10 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.conf.urls import include
+from django.conf.urls import include,url
 from website import urls
+from AILab import settings
+import django.contrib.staticfiles.views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include(urls),name='Site'),
+    url(r'^$', django.contrib.staticfiles.views.serve, kwargs={'path': 'index.html'}),
 ]

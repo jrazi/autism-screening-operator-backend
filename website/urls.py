@@ -1,7 +1,7 @@
 from django.conf.urls import url,include
 from website import views
 from rest_framework.routers import SimpleRouter
-from website.authentication import obtain_token,verify_token,remove_token
+from website.views import obtain_token,verify_token,remove_token
 
 router = SimpleRouter()
 router.register('user',views.UserProfile,'User')
@@ -14,4 +14,3 @@ urlpatterns = [
     url(r'^logout/', remove_token),
     url('^', include(router.urls))
 ]
-
