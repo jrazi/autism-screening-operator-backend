@@ -47,7 +47,7 @@ class Commands(viewsets.GenericViewSet):
 
     @list_route(methods=['get'],permission_classes=[IsLogin]) #auth
     def weel(self,requset):
-        query=self.queryset.filter(tag="W")
+        query=self.queryset.filter(tag="W").order_by("priority","arg")
         s = self.serializer_class(instance=query,many=True)
         return HttpResponse(json.dumps(s.data), status=200,
                             content_type='application/json; charset=utf8')
@@ -55,11 +55,11 @@ class Commands(viewsets.GenericViewSet):
     @list_route(methods=['get'],permission_classes=[IsLogin]) #auth
     def parrot(self,request):
         ret = {}
-        query = self.queryset.filter(tag="P_S1")
+        query = self.queryset.filter(tag="P_S1").order_by("priority","arg")
         ret["Parrot Senario 1"] = self.serializer_class(instance=query, many=True).data
-        query = self.queryset.filter(tag="P_S2")
+        query = self.queryset.filter(tag="P_S2").order_by("priority","arg")
         ret["Parrot Senario 2"] = self.serializer_class(instance=query, many=True).data
-        query = self.queryset.filter(tag="P_M")
+        query = self.queryset.filter(tag="P_M").order_by("priority","arg")
         ret["Parrot Movment"] = self.serializer_class(instance=query, many=True).data
 
         #print(ret)
@@ -70,7 +70,10 @@ class Commands(viewsets.GenericViewSet):
     @detail_route(methods=['get'],permission_classes=[IsLogin]) #auth
     def perform(self,request,pk=None):
         obj = self.queryset.get(pk=pk)
-        pub.publish("command:"+str(obj.arg))
+        if(obj.isVoice):
+            pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
+        else :
+            pub.publish("command:"+str(obj.arg))
         # do some thing with the code
         return HttpResponse(status=200,
                             content_type='application/json; charset=utf8')

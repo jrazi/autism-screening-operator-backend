@@ -17,6 +17,9 @@ class command(models.Model):
     name = models.CharField(max_length=40,null=False,blank=False)
     tag = models.CharField(choices=TAG_CHOICES,max_length=4,null=False,blank=False)
     arg = models.IntegerField(unique=True,blank=False,null=False)
+    priority = models.IntegerField(blank=False,null=False)
+    isVoice = models.BooleanField(default = False)
+    voiceFile = models.FileField(blank = True)
 
 class person(models.Model):
     first_name = models.CharField(max_length=40,null=False,blank=False)
