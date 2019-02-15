@@ -11,11 +11,53 @@ from django.http import HttpResponse
 import rospy
 from std_msgs.msg import String
 
+import os
+from os.path import expanduser
+import datetime
+
+
+
+
+
+dir = expanduser("~") + '/Desktop/'
+def create_directories():
+    global dir
+    if not os.path.exists(dir + 'cabinet_db'):
+        os.makedirs(dir + 'cabinet_db')
+    dir = dir + 'cabinet_db/'
+
+
+def create_uid_directories(num):
+    time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
+
+    if not os.path.exists(dir + '%s'%num ):
+        os.makedirs(dir + '%s'%num )
+
+    if not os.path.exists(dir + '%s'%num + '/' + time):
+        os.makedirs(dir + '%s'%num + '/' + time)
+    print (dir + '%s'%num + '/' + time)
+    return str(dir + '%s'%num + '/' + time)
 
 
 
 pub = rospy.Publisher('web/parrot',String,queue_size=10)
 rospy.init_node('webhandler',anonymous = False)
+
+parrot_command = rospy.Publisher('web/parrot_commands', String, queue_size=10)
+parrot_voice_commands = rospy.Publisher('web/parrot_voice_commands', String, queue_size=10)
+patient_uid = rospy.Publisher('web/patient_uid', String, queue_size=10)
+patient_uid_directories = rospy.Publisher('web/patient_uid/dir', String, queue_size=10)
+rospy.init_node('web_logger', anonymous=False)
+create_directories()
+
+
+
+def create_patient_directory():
+    pass
+
+
+
+
 
 class UserProfile(viewsets.GenericViewSet):
 
@@ -71,9 +113,11 @@ class Commands(viewsets.GenericViewSet):
     def perform(self,request,pk=None):
         obj = self.queryset.get(pk=pk)
         if(obj.isVoice):
-            pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
+            # pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
+            parrot_voice_commands.publish(obj.voiceFile.path)
         else :
-            pub.publish("command:"+str(obj.arg))
+            # pub.publish("command:"+str(obj.arg))
+            parrot_command.publish(str(obj.arg))
         # do some thing with the code
         return HttpResponse(status=200,
                             content_type='application/json; charset=utf8')
@@ -135,7 +179,10 @@ def obtain_token(request):
     user.login_status = True
     user.last_activity = time()
     user.save()
-    pub.publish("login:"+str(user.id))
+    # pub.publish("login:"+str(user.id))
+    patient_uid.publish(str(user.id))
+    patient_uid_directories.publish('%s'%create_uid_directories(num))
+
     return HttpResponse(json.dumps({'token': token}), status=200,
                     content_type='application/json; charset=utf8')
 
