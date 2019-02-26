@@ -43,6 +43,7 @@ def create_uid_directories(num):
 # pub = rospy.Publisher('web/parrot',String,queue_size=10)
 # rospy.init_node('webhandler',anonymous = False)
 
+parrot_command_name = rospy.Publisher('web/parrot_command_name', String, queue_size=10)
 parrot_command = rospy.Publisher('web/parrot_commands', String, queue_size=10)
 parrot_voice_commands = rospy.Publisher('web/parrot_voice_commands', String, queue_size=10)
 patient_uid = rospy.Publisher('web/patient_uid', String, queue_size=10)
@@ -112,6 +113,8 @@ class Commands(viewsets.GenericViewSet):
     @detail_route(methods=['get'],permission_classes=[IsLogin]) #auth
     def perform(self,request,pk=None):
         obj = self.queryset.get(pk=pk)
+
+        parrot_command_name.publish(str(obj.name))
         if(obj.isVoice):
             # pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
             parrot_voice_commands.publish(obj.voiceFile.path)
