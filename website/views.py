@@ -40,8 +40,8 @@ def create_uid_directories(num):
 
 
 
-pub = rospy.Publisher('web/parrot',String,queue_size=10)
-rospy.init_node('webhandler',anonymous = False)
+# pub = rospy.Publisher('web/parrot',String,queue_size=10)
+# rospy.init_node('webhandler',anonymous = False)
 
 parrot_command = rospy.Publisher('web/parrot_commands', String, queue_size=10)
 parrot_voice_commands = rospy.Publisher('web/parrot_voice_commands', String, queue_size=10)
@@ -115,6 +115,7 @@ class Commands(viewsets.GenericViewSet):
         if(obj.isVoice):
             # pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
             parrot_voice_commands.publish(obj.voiceFile.path)
+            print(obj.voiceFile.path)
         else :
             # pub.publish("command:"+str(obj.arg))
             parrot_command.publish(str(obj.arg))
@@ -181,7 +182,7 @@ def obtain_token(request):
     user.save()
     # pub.publish("login:"+str(user.id))
     patient_uid.publish(str(user.id))
-    patient_uid_directories.publish('%s'%create_uid_directories(num))
+    patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
 
     return HttpResponse(json.dumps({'token': token}), status=200,
                     content_type='application/json; charset=utf8')
