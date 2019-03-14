@@ -21,6 +21,10 @@ class command(models.Model):
     isVoice = models.BooleanField(default = False)
     voiceFile = models.FileField(blank = True)
 
+    def __str__(self):
+        return self.tag + ": " + self.name ;
+
+
 class person(models.Model):
     first_name = models.CharField(max_length=40,null=False,blank=False)
     last_name = models.CharField(max_length=50,null=False,blank=False)
@@ -36,6 +40,8 @@ class person(models.Model):
     class Meta:
         unique_together = (("first_name", "last_name","phone_number"),)
 
+    def __str__(self):
+        return self.first_name + ", " + self.last_name ;
 
 
 
