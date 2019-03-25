@@ -8,9 +8,6 @@ from website.permissions import IsLogin
 import json
 from django.http import HttpResponse
 
-import rospy
-from std_msgs.msg import String
-
 import os
 from os.path import expanduser
 import datetime
@@ -39,17 +36,16 @@ def create_uid_directories(num):
     return str(dir + '%s'%num + '/' + time)
 
 
+# import rospy
+# from std_msgs.msg import String
 
-# pub = rospy.Publisher('web/parrot',String,queue_size=10)
-# rospy.init_node('webhandler',anonymous = False)
-
-parrot_command_name = rospy.Publisher('web/parrot_command_name', String, queue_size=10)
-parrot_command = rospy.Publisher('web/parrot_commands', String, queue_size=10)
-parrot_voice_commands = rospy.Publisher('web/parrot_voice_commands', String, queue_size=10)
-patient_uid = rospy.Publisher('web/patient_uid', String, queue_size=10)
-patient_uid_directories = rospy.Publisher('web/patient_uid/dir', String, queue_size=10)
-rospy.init_node('web_logger', anonymous=False)
-create_directories()
+# parrot_command_name = rospy.Publisher('web/parrot_command_name', String, queue_size=10)
+# parrot_command = rospy.Publisher('web/parrot_commands', String, queue_size=10)
+# parrot_voice_commands = rospy.Publisher('web/parrot_voice_commands', String, queue_size=10)
+# patient_uid = rospy.Publisher('web/patient_uid', String, queue_size=10)
+# patient_uid_directories = rospy.Publisher('web/patient_uid/dir', String, queue_size=10)
+# rospy.init_node('web_logger', anonymous=False)
+# create_directories()
 
 
 
@@ -114,14 +110,13 @@ class Commands(viewsets.GenericViewSet):
     def perform(self,request,pk=None):
         obj = self.queryset.get(pk=pk)
 
-        parrot_command_name.publish(str(obj.name))
+        # parrot_command_name.publish(str(obj.name))
         if(obj.isVoice):
-            # pub.publish("command:"+str(obj.arg)+"#"+obj.voiceFile.path)
-            parrot_voice_commands.publish(obj.voiceFile.path)
+            # parrot_voice_commands.publish(obj.voiceFile.path)
             print(obj.voiceFile.path)
         else :
-            # pub.publish("command:"+str(obj.arg))
-            parrot_command.publish(str(obj.arg))
+            # parrot_command.publish(str(obj.arg))
+            pass
         # do some thing with the code
         return HttpResponse(status=200,
                             content_type='application/json; charset=utf8')
@@ -183,9 +178,8 @@ def obtain_token(request):
     user.login_status = True
     user.last_activity = time()
     user.save()
-    # pub.publish("login:"+str(user.id))
-    patient_uid.publish(str(user.id))
-    patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
+    # patient_uid.publish(str(user.id))
+    # patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
 
     return HttpResponse(json.dumps({'token': token}), status=200,
                     content_type='application/json; charset=utf8')

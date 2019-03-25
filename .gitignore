@@ -1,0 +1,5 @@
+db.sqlite3
+website/migrations/*
+staticRoot/*
+.idea/
+*.pyc
