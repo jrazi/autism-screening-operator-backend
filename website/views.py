@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route,detail_route
 from website import serializer,models
 from website.permissions import IsLogin
+from website.authentication import PersonAuthentication
 import json
 from django.http import HttpResponse
 
@@ -60,6 +61,7 @@ class UserProfile(viewsets.GenericViewSet):
 
     queryset = models.person.objects.all()
     serializer_class = serializer.person_serializer
+    authentication_classes = (PersonAuthentication,)
 
     def create(self,request):
         s = self.serializer_class(data=request.data)
@@ -80,6 +82,7 @@ class UserProfile(viewsets.GenericViewSet):
             return HttpResponse(json.dumps(s.errors), status=400, content_type='application/json; charset=utf8')
 
 class Commands(viewsets.GenericViewSet):
+    authentication_classes = (PersonAuthentication,)
     queryset = models.command.objects.all()
     serializer_class = serializer.command_serializer
     permission_classes = (IsLogin,)

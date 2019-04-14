@@ -9,7 +9,7 @@ router.register('command',views.Commands,'Command')
 
 
 urlpatterns = [
-    url(r'login/', obtain_token),
+    url(r'^login/', obtain_token),
     url(r'^verify_token/', verify_token),
     url(r'^logout/', remove_token),
     url('^', include(router.urls))

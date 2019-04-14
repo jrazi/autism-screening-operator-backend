@@ -16,13 +16,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include,url
-from website import urls
+from website import urls as website_urls
 from AILab import settings
 import django.contrib.staticfiles.views
+
+from dir_browser import urls as dir_urls
+from dir_browser import view_auth
+from django.contrib.auth import urls as auth_urls
+
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include(urls),name='Site'),
+    path('',include(website_urls),name='Site'),
+    # path('auth/login/',view_auth.login_req),
+    path('auth/login/',auth_urls.views.login),
+    path('auth/logout/',auth_urls.views.logout),
+    path('auth/register/',view_auth.register),
+    path('',include(dir_urls)),
     url(r'^$', django.contrib.staticfiles.views.serve, kwargs={'path': 'index.html'}),
 ]
