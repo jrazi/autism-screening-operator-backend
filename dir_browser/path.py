@@ -52,6 +52,7 @@ def get_content(directory):
 
 streaming_file_type={
     'mp4':('video','video/mp4'),
+    'mkv':('video','video/mp4'),
     'mov':('video','video/mp4'),
     'webm':('video','video/webm'),
     'mp3':('audio','audio/mpeg'),

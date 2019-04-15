@@ -26,10 +26,13 @@ def _list_directory(request, directory):
     if check_access(request):
         files, directories = get_content(directory)
         directory_name = ('' if (directory == get_abs_root()) else get_rel_path(directory)) + '/'
+        parrent_dir = ('' if (directory == get_abs_root()) else get_rel_path(os.path.dirname(directory)))
+
         data = {
             'directory_name': directory_name,
             'directory_files':[(file,get_rel_path(os.path.join(directory,file)))+streaming_file(os.path.join(directory,file)) for file in files],
             'directory_directories':[(dir,get_rel_path(os.path.join(directory,dir))) for dir in directories],
+            'back_dir' : parrent_dir
         }
         template = get_template('dir/directory.html')
         return HttpResponse(template.render(data, request))
@@ -50,6 +53,7 @@ def _show_file(request, file_path):
                 'type':type,
                 'filename':os.path.basename(file_path),
                 'link':get_rel_path(file_path),
+                'back_dir': get_rel_path(os.path.dirname(file_path))
             }
             template = get_template('dir/show_file.html')
             return HttpResponse(template.render(data, request))
@@ -70,8 +74,10 @@ def browse(request, path):
 
         if os.path.isfile(eventual_path):
             return _show_file(request, eventual_path)
-        else:
+        elif os.path.isdir(eventual_path):
             return _list_directory(request, eventual_path)
+        else:
+            raise Http404
 
 
 def download_file(request,path):
