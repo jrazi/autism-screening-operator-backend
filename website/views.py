@@ -69,7 +69,7 @@ class UserProfile(viewsets.GenericViewSet):
             s.save()
             return HttpResponse(json.dumps(request.data), status=200, content_type='application/json; charset=utf8')
         else:
-            return HttpResponse(json.dumps(s.errors), status=400, content_type='application/json; charset=utf8')
+            return HttpResponse(json.dumps({"errors":"اطلاعات وارد شده درست نیست"}), status=400, content_type='application/json; charset=utf8')
 
     @list_route(methods=['put','patch'],permission_classes=[IsLogin])  #auth
     def change(self,request):
@@ -154,7 +154,7 @@ def obtain_token(request):
             last_name = data['last_name']
             phone_number = data['phone_number']
         except:
-            return HttpResponse(json.dumps({'errors': 'bad input'}), status=400,
+            return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
         try:
@@ -163,7 +163,7 @@ def obtain_token(request):
             pass
         else:
             if not (login_person.first_name==first_name and login_person.last_name==last_name and login_person.phone_number==phone_number):
-                return HttpResponse(json.dumps({'errors': 'another user loged in'}), status=400,
+                return HttpResponse(json.dumps({'errors': 'فرد دیگری وارد شده است'}), status=400,
                                     content_type='application/json; charset=utf8')
 
         try:
@@ -171,7 +171,7 @@ def obtain_token(request):
                                       phone_number=phone_number)
         except:
 
-            return HttpResponse(json.dumps({"errors":"user not exist"}), status=401, content_type='application/json; charset=utf8')
+            return HttpResponse(json.dumps({"errors":"اطلاعات درست نیست"}), status=401, content_type='application/json; charset=utf8')
 
 
 
