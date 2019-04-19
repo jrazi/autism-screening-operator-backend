@@ -145,101 +145,85 @@ from .authentication import decode_and_check_auth_token
 
 @csrf_exempt
 def obtain_token(request):
-    if(request.method=="OPTIONS") :
-        return HttpResponse(status=200)
-    elif request.method=="POST":
-        try:
-            data=json.loads(codecs.decode(request.body,'utf-8'))
-            first_name = data['first_name']
-            last_name = data['last_name']
-            phone_number = data['phone_number']
-        except:
-            return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
+    try:
+        data=json.loads(codecs.decode(request.body,'utf-8'))
+        first_name = data['first_name']
+        last_name = data['last_name']
+        phone_number = data['phone_number']
+    except:
+        return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
+                            content_type='application/json; charset=utf8')
+
+    try:
+        login_person = person.objects.get(login_status=True , last_activity__gt=time()-timeDelta)
+    except:
+        pass
+    else:
+        if not (login_person.first_name==first_name and login_person.last_name==last_name and login_person.phone_number==phone_number):
+            return HttpResponse(json.dumps({'errors': 'فرد دیگری وارد شده است'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-        try:
-            login_person = person.objects.get(login_status=True , last_activity__gt=time()-timeDelta)
-        except:
-            pass
-        else:
-            if not (login_person.first_name==first_name and login_person.last_name==last_name and login_person.phone_number==phone_number):
-                return HttpResponse(json.dumps({'errors': 'فرد دیگری وارد شده است'}), status=400,
-                                    content_type='application/json; charset=utf8')
+    try:
+        user = person.objects.get(first_name=first_name, last_name=last_name,
+                                  phone_number=phone_number)
+    except:
 
-        try:
-            user = person.objects.get(first_name=first_name, last_name=last_name,
-                                      phone_number=phone_number)
-        except:
-
-            return HttpResponse(json.dumps({"errors":"اطلاعات درست نیست"}), status=401, content_type='application/json; charset=utf8')
+        return HttpResponse(json.dumps({"errors":"اطلاعات درست نیست"}), status=401, content_type='application/json; charset=utf8')
 
 
 
-        data={'first_name':first_name,'last_name':last_name,'phone_number':phone_number}
-        for another_user in person.objects.filter(login_status=True):
-            another_user.login_status=False
-            another_user.save()
+    data={'first_name':first_name,'last_name':last_name,'phone_number':phone_number}
+    for another_user in person.objects.filter(login_status=True):
+        another_user.login_status=False
+        another_user.save()
 
-        token = generateToken(data)
-        user.login_status = True
-        user.last_activity = time()
-        user.save()
-        # patient_uid.publish(str(user.id))
-        # patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
+    token = generateToken(data)
+    user.login_status = True
+    user.last_activity = time()
+    user.save()
+    # patient_uid.publish(str(user.id))
+    # patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
 
-        return HttpResponse(json.dumps({'token': token}), status=200,
-                        content_type='application/json; charset=utf8')
-
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(json.dumps({'token': token}), status=200,
+                    content_type='application/json; charset=utf8')
 
 
 @csrf_exempt
 def verify_token(request):
-    if (request.method == "OPTIONS"):
-        return HttpResponse(status=200)
-    elif request.method == "POST":
-        try:
-            token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
-            data = decode_and_check_auth_token(token)
-            user = person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
-                                      phone_number=data['phone_number'])
-        except:
-            return HttpResponse(status=400, content_type='application/json; charset=utf8')
-        if user.login_status == True and user.last_activity + timeDelta > time():
-            user.last_activity = time()
-            user.save()
-            return HttpResponse(status=200, content_type='application/json; charset=utf8')
-        else:
-            if user.login_status == True:
-                user.login_status = False
-                user.save()
-            return HttpResponse(status=400, content_type='application/json; charset=utf8')
+    try:
+        token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
+        data = decode_and_check_auth_token(token)
+        user = person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
+                                  phone_number=data['phone_number'])
+    except:
+        return HttpResponse(status=400, content_type='application/json; charset=utf8')
+    if user.login_status == True and user.last_activity + timeDelta > time():
+        user.last_activity = time()
+        user.save()
+        return HttpResponse(status=200, content_type='application/json; charset=utf8')
     else:
-        return HttpResponse(status=400)
+        if user.login_status == True:
+            user.login_status = False
+            user.save()
+        return HttpResponse(status=400, content_type='application/json; charset=utf8')
+
 
 
 
 @csrf_exempt
 def remove_token(request):
-    if (request.method == "OPTIONS"):
-        return HttpResponse(status=200)
-    elif request.method == "POST":
-        try:
-            token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
-            data = decode_and_check_auth_token(token)
-            user = person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
-                                      phone_number=data['phone_number'])
-            user.login_status = False;
-            user.last_activity = time()
-            user.save()
-            return HttpResponse(json.dumps({"message": "logout complete"}), status=200,
-                                content_type='application/json; charset=utf8')
-        except:
-            return HttpResponse(status=400, content_type='application/json; charset=utf8')
-
-    else:
-        return HttpResponse(status=400)
+    try:
+        token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
+        data = decode_and_check_auth_token(token)
+        user = person.objects.get(first_name=data['first_name'], last_name=data['last_name'],
+                                  phone_number=data['phone_number'])
+        user.login_status = False;
+        user.last_activity = time()
+        user.save()
+        return HttpResponse(json.dumps({"message": "logout complete"}), status=200,
+                            content_type='application/json; charset=utf8')
+    except:
+        return HttpResponse(status=400, content_type='application/json; charset=utf8')
 
 
 def index(request,path):

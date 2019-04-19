@@ -74,7 +74,18 @@ html {
 }
 
 #exit_buttom{
-  padding-top: 15px;
+    padding-top: 15px;
+  }
+
+@media only screen and (max-width: 600px) {
+    #header_title{
+        font-size: 12px;
+      }
+      #exit_buttom{
+        padding-top: 20px;
+        font-size: 10px;
+      }
+      
 }
 
 
@@ -271,10 +282,12 @@ body {
 
 .col-sm-0 {
     width: 0;
+    padding:  0;
 }
 
 .col-xs-0 {
     width: 0;
+    padding :0;
 }
 
 #bid_submit {
@@ -298,18 +311,6 @@ body {
     height: 60px;
 }
 
-#home_title{
-    font-size: 32px;
-    padding-top: 20px ;
-    padding-right: 10%;
-    color: #00858D;
-}
-
-#home_description{
-    font-size: 12px;
-    padding-right:12%;
-
-}
 
 
 #search_container {
@@ -396,4 +397,11 @@ body {
 .row{
     margin-right: 0;
     margin-left: 0;
+}
+
+
+.fit_content{
+    width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+    width: -moz-max-content;    /* Firefox/Gecko */
+    width: -webkit-max-content; /* Chrome */
 }
