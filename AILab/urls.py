@@ -25,14 +25,19 @@ from dir_browser import view_auth
 from django.contrib.auth import urls as auth_urls
 
 
+from django.urls import re_path
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include(website_urls),name='Site'),
+    path('website/',include(website_urls),name='Site'),
     # path('auth/login/',view_auth.login_req),
     path('auth/login/',auth_urls.views.login),
     path('auth/logout/',auth_urls.views.logout),
     path('auth/register/',view_auth.register),
     path('',include(dir_urls)),
-    url(r'^$', django.contrib.staticfiles.views.serve, kwargs={'path': 'index.html'}),
+    re_path(r'^static/(?P<path>.*)$', serve, {
+            'document_root': settings.STATIC_ROOT,
+        }),
+    url(r'^(?P<path>.*)$',website_urls.views.index),
 ]
