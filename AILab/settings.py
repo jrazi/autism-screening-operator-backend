@@ -52,8 +52,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'website.cors.CorsMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'website.cors.CorsMiddleware'
 ]
 
 
