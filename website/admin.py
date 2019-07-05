@@ -3,4 +3,4 @@ from website import models
 # Register your models here.
 
 admin.site.register(models.command)
-admin.site.register(models.person)
+admin.site.register(models.Patient)

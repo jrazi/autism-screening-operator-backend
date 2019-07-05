@@ -20,8 +20,6 @@ from website import urls as website_urls
 from AILab import settings
 import django.contrib.staticfiles.views
 
-from dir_browser import urls as dir_urls
-from dir_browser import view_auth
 from django.contrib.auth import urls as auth_urls
 
 
@@ -30,14 +28,9 @@ from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('website/',include(website_urls),name='Site'),
-    # path('auth/login/',view_auth.login_req),
-    path('auth/login/',auth_urls.views.login),
-    path('auth/logout/',auth_urls.views.logout),
-    path('auth/register/',view_auth.register),
-    path('',include(dir_urls)),
+    path('api/',include(website_urls),name='Site'),
     re_path(r'^static/(?P<path>.*)$', serve, {
             'document_root': settings.STATIC_ROOT,
         }),
-    url(r'^(?P<path>.*)$',website_urls.views.index),
+    # url(r'^(?P<path>.*)$',website_urls.views.index),
 ]

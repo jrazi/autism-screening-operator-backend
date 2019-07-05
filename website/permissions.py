@@ -17,3 +17,59 @@ class IsLogin(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
        return self.has_permission(request,view)
+
+
+
+class NotStarted(permissions.BasePermission):
+    message = 'you\'re not start the pregame yet'
+    def has_permission(self, request, view):
+        if (request.user==None):
+            return False
+        if (request.user.stage == "NS"):
+            return True
+        else:
+            return False
+    def has_object_permission(self, request, view, obj):
+       return self.has_permission(request,view)
+
+class StartedPreGame(permissions.BasePermission):
+    message = 'you\'re not done the pregame yet'
+    def has_permission(self, request, view):
+        if (request.user == None):
+            return False
+        if (request.user.stage == "PG"):
+            return True
+        else:
+            return False
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
+
+class StartedWeel(permissions.BasePermission):
+    message = 'you\'re not done Weel yet'
+
+    def has_permission(self, request, view):
+        if (request.user == None):
+            return False
+        if (request.user.stage == "W"):
+            return True
+        else:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
+
+class StartedParrot(permissions.BasePermission):
+    message = 'you\'re not done parrot yet'
+
+    def has_permission(self, request, view):
+        if (request.user == None):
+            return False
+        if (request.user.stage == "P"):
+            return True
+        else:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)

@@ -10,7 +10,7 @@ body{
 }
 
 .container{
-    margin-top: 35px;
+    /*margin-top: 35px;*/
     margin-right: 5%;
     margin-left: 5%;
 }
@@ -28,11 +28,18 @@ body{
     color: #ffd000;
     margin-bottom: 15px;
     font-size: 20px;
+
+    position:fixed;
+    width:100%;
+    height: 90px;
+    padding-top: 30px;
+    background: white;
+    z-index: 1;
 }
 
-#back_btn{
+.green_btn{
     color: #298018;
-    padding: 10px;
+    padding: 6px;
 }
 
 .film_item{
@@ -68,6 +75,7 @@ a:hover{
 #current_file {
     margin-bottom: 40px;
     font-size: 32px;
+    margin-top:40px;
 }
 
 
@@ -78,4 +86,9 @@ a:hover{
 
 .content_container{
     text-align: center;
+}
+
+.dir_content{
+    padding: 60px;
+    padding-top: 110px;
 }

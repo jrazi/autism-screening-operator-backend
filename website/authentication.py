@@ -1,4 +1,4 @@
-from .models import person
+from .models import Patient
 from rest_framework import authentication
 from rest_framework import exceptions
 from .token import decodeToken,generateToken
@@ -23,11 +23,11 @@ class PersonAuthentication(authentication.BaseAuthentication):
         except:
             raise exceptions.AuthenticationFailed('bad token')
         try:
-            user = person.objects.get(first_name=data['first_name'],last_name=data['last_name'],phone_number=data['phone_number'])
+            user = Patient.objects.get(id = data['id'])
         except:
             raise exceptions.AuthenticationFailed('No such user')
 
-        if user.last_activity+timeDelta < time() or user.login_status==False:
+        if user.last_activity + timeDelta < time() or user.login_status == False:
             if user.login_status==True:
                 user.login_status=False
                 user.save()
@@ -41,7 +41,5 @@ class PersonAuthentication(authentication.BaseAuthentication):
 
 def decode_and_check_auth_token(token):
     data = decodeToken(token)
-    first_name = data['first_name']
-    last_name = data['last_name']
-    phone_number = data['phone_number']
+    id = data['id']
     return data

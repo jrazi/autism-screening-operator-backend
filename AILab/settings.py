@@ -40,10 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'corsheaders',
+    'rest_framework',
     'website',
-    'dir_browser',
 ]
 
 MIDDLEWARE = [
@@ -115,9 +114,6 @@ REST_FRAMEWORK = {
 }
 
 
-
-AUTH_USER_MODEL = 'dir_browser.CustomUser'
-
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -146,13 +142,3 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT =  os.path.join(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
-
-
-
-DIRECTORY_TO_BROWSE = '/home/amin/Downloads'
-
-
-# ________________________ AUTH _______________________
-
-LOGIN_REDIRECT_URL = '/'  # after login were should we go ??
-LOGOUT_REDIRECT_URL = '/'

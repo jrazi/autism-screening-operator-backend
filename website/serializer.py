@@ -5,14 +5,10 @@ from website import models
 class command_serializer(serializers.ModelSerializer):
     class Meta:
         model = models.command
-        fields = ('id','name')
-        read_only_fields = ('id','name')
+        fields = ('id','name','performTime')
+        read_only_fields = ('id','name','performTime')
 
 class person_serializer(serializers.ModelSerializer):
     class Meta:
-        model = models.person
-        fields = ('first_name','last_name','phone_number','age')
-        extra_kwargs = {'first_name': {'write_only': True},
-                        'last_name': {'write_only': True},
-                        'phone_number': {'write_only': True},
-                        'age': {'write_only': True},}
+        model = models.Patient
+        fields = ('first_name','last_name','phone_number','birthYear','gender','medicalInfo','personID')
