@@ -33,13 +33,17 @@ class Patient(models.Model):
                                  message="شماره تلفن خود را در فرمت مناسب بنویسید")
     phone_number = models.CharField(max_length=17,null=False,blank=False, validators=[RegexValidator])  # validators should be a list
     birthYear = models.IntegerField(null=True, blank=True)
-    gender = models.BooleanField(null=False, blank=False)
+    genderValues = (
+        ("مرد", "مرد"),
+        ("زن", "زن"),
+    )
+    gender = models.CharField(null=False, blank=False, max_length=10, choices=genderValues)
 
     medicalHistory = (
         ("ADHD", "ADHD"),
-        ("Normal", "نرمال"),
-        ("Autism", "اتیسم"),
-        ("Undefined", "تعیین نشده"),
+        ("نرمال", "نرمال"),
+        ("اتیسم", "اتیسم"),
+        ("تعیین نشده", "تعیین نشده"),
     )
     medicalInfo = models.CharField(choices=medicalHistory, max_length=10, null=False, blank=False)
     personIDRegex = RegexValidator(regex=r'^\d{10}$',

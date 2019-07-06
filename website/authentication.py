@@ -14,8 +14,9 @@ from website.serializer import person_serializer
 class PersonAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
-        token = request.META.get('HTTP_AUTH')
+        token = request.META.get('HTTP_TOKEN')
         if token == None :
+            print("header not set")
             return (None,None)
 
         try :

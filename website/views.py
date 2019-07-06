@@ -56,23 +56,9 @@ def create_patient_directory():
 
 
 
-
-
-class UserProfileDetail(mixins.RetrieveModelMixin,
+class UserProfileList(  mixins.RetrieveModelMixin,
                         mixins.UpdateModelMixin,
-                        viewsets.generics.GenericAPIView):
-    queryset = models.Patient.objects.all()
-    serializer_class = serializer.person_serializer
-    authentication_classes = (PersonAuthentication,)
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class UserProfileList(  mixins.CreateModelMixin,
+                        mixins.CreateModelMixin,
                         viewsets.generics.GenericAPIView):
     queryset = models.Patient.objects.all()
     serializer_class = serializer.person_serializer
@@ -81,6 +67,25 @@ class UserProfileList(  mixins.CreateModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+
+    def get(self, request, *args, **kwargs):
+        if request.user:
+            return HttpResponse(json.dumps(self.serializer_class(instance = request.user).data), status=200,
+                                content_type='application/json; charset=utf8')
+        else:
+            return HttpResponse(json.dumps({'errors': 'اول با حساب خود وارد شوید'}), status=400,
+                                content_type='application/json; charset=utf8')
+
+    def put(self, request, *args, **kwargs):
+        if request.user :
+            s = self.serializer_class(instance=request.user,partial=True,data=request.data)
+            if s.is_valid():
+                s.save()
+            return HttpResponse(json.dumps(self.serializer_class(request.user).data), status=200,
+                                content_type='application/json; charset=utf8')
+        else:
+            return HttpResponse(json.dumps({'errors': 'اول با حساب خود وارد شوید'}), status=400,
+                                content_type='application/json; charset=utf8')
 
 class PreGameCommands(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
@@ -98,6 +103,7 @@ class PreGameCommands(viewsets.GenericViewSet):
             car = data['car']
             game = data['game']
             system = data['system']
+            print(car,game,system)
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
@@ -121,6 +127,7 @@ class WeelCommands(viewsets.GenericViewSet):
         try:
             data = json.loads(codecs.decode(request.body, 'utf-8'))
             status = data['status']
+            print(status)
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
@@ -172,7 +179,7 @@ class ParrotCommands(viewsets.GenericViewSet):
                 print(command.voiceFile.path)
             else:
                 # parrot_command.publish(str(command.arg))
-                pass
+                print(command.arg)
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
