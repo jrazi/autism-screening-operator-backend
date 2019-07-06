@@ -95,6 +95,8 @@ class PreGameCommands(viewsets.GenericViewSet):
     def start(self,request):
         request.user.stage = "PG"
         request.user.save()
+        return HttpResponse("", status=200,
+                            content_type='application/json; charset=utf8')
 
     @list_route(methods=['post'], permission_classes=[StartedPreGame])  # auth
     def send_data(self, request):
@@ -121,6 +123,8 @@ class WeelCommands(viewsets.GenericViewSet):
     def start(self,request):
         request.user.stage = "W"
         request.user.save()
+        return HttpResponse(json.dumps(""), status=200,
+                            content_type='application/json; charset=utf8')
 
     @list_route(methods=['post'], permission_classes=[StartedWeel])  # auth
     def perform(self, request):
@@ -149,6 +153,8 @@ class ParrotCommands(viewsets.GenericViewSet):
     def start(self,request):
         request.user.stage = "P"
         request.user.save()
+        return HttpResponse(json.dumps(""), status=200,
+                            content_type='application/json; charset=utf8')
 
     @list_route(methods=['get'], permission_classes=[StartedParrot])  # auth
     def commands(self, request):
@@ -191,6 +197,8 @@ class ParrotCommands(viewsets.GenericViewSet):
     def stop(self, request):
         request.user.stage = "D"
         request.user.save()
+        return HttpResponse(json.dumps(""), status=200,
+                            content_type='application/json; charset=utf8')
 
 
 

@@ -21,7 +21,7 @@ class IsLogin(permissions.BasePermission):
 
 
 class NotStarted(permissions.BasePermission):
-    message = 'you\'re not start the pregame yet'
+    message = 'you\'re can\'t start pregame at this stage'
     def has_permission(self, request, view):
         if (request.user==None):
             return False
@@ -33,7 +33,7 @@ class NotStarted(permissions.BasePermission):
        return self.has_permission(request,view)
 
 class StartedPreGame(permissions.BasePermission):
-    message = 'you\'re not done the pregame yet'
+    message = 'you\'re not started the pregame yet'
     def has_permission(self, request, view):
         if (request.user == None):
             return False
@@ -46,7 +46,7 @@ class StartedPreGame(permissions.BasePermission):
 
 
 class StartedWeel(permissions.BasePermission):
-    message = 'you\'re not done Weel yet'
+    message = 'you\'re not started Weel yet'
 
     def has_permission(self, request, view):
         if (request.user == None):
@@ -61,7 +61,7 @@ class StartedWeel(permissions.BasePermission):
 
 
 class StartedParrot(permissions.BasePermission):
-    message = 'you\'re not done parrot yet'
+    message = 'you\'re not started parrot yet'
 
     def has_permission(self, request, view):
         if (request.user == None):
