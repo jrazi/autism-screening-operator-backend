@@ -27,7 +27,6 @@ class PersonAuthentication(authentication.BaseAuthentication):
             user = Patient.objects.get(id = data['id'])
         except:
             raise exceptions.AuthenticationFailed('No such user')
-
         if user.last_activity + timeDelta < time() or user.login_status == False:
             if user.login_status==True:
                 user.login_status=False

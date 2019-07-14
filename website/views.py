@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # Create your views here.
 from rest_framework import viewsets
@@ -118,7 +117,6 @@ class WeelCommands(viewsets.GenericViewSet):
     permission_classes = (IsLogin,)
 
 
-
     @list_route(methods=['get'],permission_classes=[StartedPreGame]) #auth
     def start(self,request):
         request.user.stage = "W"
@@ -231,30 +229,29 @@ def obtain_token(request):
 
     try:
         login_person = Patient.objects.get(login_status=True , last_activity__gt=time()-timeDelta)
-    except:
-        pass
-    else:
-        if not (login_person.personID== personID):
+        if not (login_person.personID == personID):
             return HttpResponse(json.dumps({'errors': 'فرد دیگری وارد شده است'}), status=400,
                                 content_type='application/json; charset=utf8')
+    except:
+        pass
 
     try:
         user = Patient.objects.get(personID = personID)
     except:
-
-        return HttpResponse(json.dumps({"errors":"اطلاعات درست نیست"}), status=401, content_type='application/json; charset=utf8')
+        return HttpResponse(json.dumps({"errors":"کاربری با این مشخصات وجود ندارد"}), status=401, content_type='application/json; charset=utf8')
 
 
 
     data={'id': user.id}
+    # This should never happen TODO LOG
     for another_user in Patient.objects.filter(login_status=True):
         another_user.login_status=False
         another_user.save()
 
     token = generateToken(data)
+    if not user.login_status:
+        user.stage = "NS" 
     user.login_status = True
-    user.last_activity = time()
-    user.stage = "NS"
     user.save()
     # patient_uid.publish(str(user.id))
     # patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
@@ -275,10 +272,9 @@ def verify_token(request):
         user.last_activity = time()
         user.save()
         return HttpResponse(status=200, content_type='application/json; charset=utf8')
-    else:
-        if user.login_status == True:
-            user.login_status = False
-            user.save()
+    elif user.login_status == True:
+        user.login_status = False
+        user.save()
         return HttpResponse(status=400, content_type='application/json; charset=utf8')
 
 
@@ -287,23 +283,18 @@ def verify_token(request):
 @csrf_exempt
 def remove_token(request):
     try:
-        token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
-        data = decode_and_check_auth_token(token)
-        user = Patient.objects.get(id = data['id'])
+        user = PersonAuthentication.authenticate(None, request)[0]
         user.login_status = False
         user.last_activity = time()
         user.stage = "NS"
         user.save()
         return HttpResponse(json.dumps({"message": "logout complete"}), status=200,
                             content_type='application/json; charset=utf8')
-    except:
-        return HttpResponse(status=400, content_type='application/json; charset=utf8')
+
+    except exceptions.AuthenticationFailed as e:
+        return HttpResponse(json.dumps({"errors":"کاربری با این مشخصات وارد نشده"}), status=400, content_type='application/json; charset=utf8')
 
 
 def index(request,path):
     with open("./index.html") as index_file:
         return HttpResponse(index_file,status=200)
-
-
-
-
