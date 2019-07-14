@@ -3,3 +3,5 @@ website/migrations/*
 staticRoot/*
 .idea/
 *.pyc
+todo.txt
+

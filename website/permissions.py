@@ -19,12 +19,9 @@ class IsLogin(permissions.BasePermission):
        return self.has_permission(request,view)
 
 
-
 class NotStarted(permissions.BasePermission):
     message = 'you\'re can\'t start pregame at this stage'
     def has_permission(self, request, view):
-        if (request.user==None):
-            return False
         if (request.user.stage == "NS"):
             return True
         else:

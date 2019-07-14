@@ -1,0 +1,12 @@
+Test class for API
+Logger
+Refactoring view module (Implement key methods in model)
+ROS API
+MySQl as test database
+
+Seems to suck:
+User authentication, authorization 
+Exception Handling
+Message Passing to Client Side
+API url routing
+
