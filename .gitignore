@@ -5,3 +5,5 @@ staticRoot/*
 *.pyc
 todo.txt
 todo.*
+*.log
+.todo.*

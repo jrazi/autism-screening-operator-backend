@@ -16,29 +16,32 @@ class PersonAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         token = request.META.get('HTTP_TOKEN')
         if token == None :
-            print("header not set")
+            raise exceptions.AuthenticationFailed('Empty Token')
             return (None,None)
 
         try :
             data = decode_and_check_auth_token(token)
         except:
-            raise exceptions.AuthenticationFailed('bad token')
+            raise exceptions.AuthenticationFailed('Invalid Token')
         try:
             user = Patient.objects.get(id = data['id'])
         except:
-            raise exceptions.AuthenticationFailed('No such user')
+            raise exceptions.AuthenticationFailed('No Such User')
         if user.last_activity + timeDelta < time() or user.login_status == False:
             if user.login_status==True:
                 user.login_status=False
                 user.save()
-            raise exceptions.AuthenticationFailed('not logined')
+            raise exceptions.AuthenticationFailed('Not Logged In')
 
         else:
             user.last_activity=time()
             user.save()
             return (user, None)
 
-
+class NoAuth(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        return True
+        
 def decode_and_check_auth_token(token):
     data = decodeToken(token)
     id = data['id']

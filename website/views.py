@@ -61,13 +61,19 @@ class UserProfileList(  mixins.RetrieveModelMixin,
                         viewsets.generics.GenericAPIView):
     queryset = models.Patient.objects.all()
     serializer_class = serializer.person_serializer
-    authentication_classes = (PersonAuthentication,)
+
+    def get_authenticators(self):
+        if self.request.method == "POST":
+            return []
+        else: return [PersonAuthentication()]
+        return super(UserProfileList, self).get_authenticators()
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
 
     def get(self, request, *args, **kwargs):
+        print ('get-user')
         if request.user:
             return HttpResponse(json.dumps(self.serializer_class(instance = request.user).data), status=200,
                                 content_type='application/json; charset=utf8')
@@ -105,10 +111,11 @@ class PreGameCommands(viewsets.GenericViewSet):
             game = data['game']
             system = data['system']
             print(car,game,system)
-            # do something with data
+            # do something with data            # do something with data
+
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
-        except:
+        except (ValueError, json.JSONDecodeError):
             return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
@@ -133,7 +140,7 @@ class WeelCommands(viewsets.GenericViewSet):
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
-        except:
+        except(ValueError, json.JSONDecodeError):
             return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
@@ -187,7 +194,7 @@ class ParrotCommands(viewsets.GenericViewSet):
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
-        except:
+        except (ValueError, json.JSONDecodeError):
             return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
@@ -223,27 +230,25 @@ def obtain_token(request):
     try:
         data=json.loads(codecs.decode(request.body,'utf-8'))
         personID = data['personID']
-    except:
+    except (ValueError, json.JSONDecodeError):
         return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                             content_type='application/json; charset=utf8')
+
+    try:
+        user = Patient.objects.get(personID = personID)
+    except Patient.DoesNotExist:
+        return HttpResponse(json.dumps({"errors":"کاربری با این مشخصات وجود ندارد"}), status=401, content_type='application/json; charset=utf8')
 
     try:
         login_person = Patient.objects.get(login_status=True , last_activity__gt=time()-timeDelta)
         if not (login_person.personID == personID):
             return HttpResponse(json.dumps({'errors': 'فرد دیگری وارد شده است'}), status=400,
                                 content_type='application/json; charset=utf8')
-    except:
+    except Patient.DoesNotExist:
         pass
 
-    try:
-        user = Patient.objects.get(personID = personID)
-    except:
-        return HttpResponse(json.dumps({"errors":"کاربری با این مشخصات وجود ندارد"}), status=401, content_type='application/json; charset=utf8')
-
-
-
     data={'id': user.id}
-    # This should never happen TODO LOG
+    
     for another_user in Patient.objects.filter(login_status=True):
         another_user.login_status=False
         another_user.save()
@@ -251,6 +256,7 @@ def obtain_token(request):
     token = generateToken(data)
     if not user.login_status:
         user.stage = "NS" 
+    user.last_activity = time()    
     user.login_status = True
     user.save()
     # patient_uid.publish(str(user.id))
@@ -263,7 +269,18 @@ def obtain_token(request):
 @csrf_exempt
 def verify_token(request):
     try:
-        token = json.loads(codecs.decode(request.body, 'utf-8'))['token']
+        user = PersonAuthentication.authenticate(None, request)[0]
+        user.last_activity = time()
+        user.save()
+        return HttpResponse(status=200, content_type='application/json; charset=utf8')
+    
+    except exceptions.AuthenticationFailed as e: 
+        return HttpResponse(json.dumps({"errors": str(e)}), status=400, content_type='application/json; charset=utf8')
+
+
+"""
+    try:
+        token = request.META.get('HTTP_TOKEN')
         data = decode_and_check_auth_token(token)
         user = Patient.objects.get(id = data['id'])
     except:
@@ -276,6 +293,7 @@ def verify_token(request):
         user.login_status = False
         user.save()
         return HttpResponse(status=400, content_type='application/json; charset=utf8')
+"""
 
 
 

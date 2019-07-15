@@ -147,3 +147,40 @@ MEDIA_ROOT =  os.path.join(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
 
 APPEND_SLASH=False
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'default': {
+       #     'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/logs.log',
+            'formatter':'standard',
+        },  
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['default'],
+            'level': 'ERROR',
+            'propagate': True
+        },
+        'django': {
+            'handlers': ['default'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'website': {
+            'handlers': ['default'],
+            'level': 'INFO',
+            'propagate': True
+        },
+
+    }
+}
