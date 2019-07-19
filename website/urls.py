@@ -5,14 +5,16 @@ from rest_framework.routers import SimpleRouter
 from website.views import obtain_token,verify_token,remove_token
 
 router = SimpleRouter()
-router.register('eval/pregame',views.PreGameCommands,'PreGame')
-router.register('eval/weel',views.WeelCommands,'Weel')
+router.register('eval/game',views.GameCommands,'Game')
+router.register('eval/wheel',views.WheelCommands,'Wheel')
 router.register('eval/parrot',views.ParrotCommands,'Parrot')
+# router.register('eval/toycar', views.ToyCarData, 'ToyCar')
 
 urlpatterns = [
     url(r'auth/login', obtain_token),
     url(r'auth/check', verify_token),
     url(r'auth/logout', remove_token),
     path('user/',views.UserProfileList.as_view()),
+    path('eval/toycar', views.ToyCarData.as_view()),
     url('', include(router.urls))
 ]

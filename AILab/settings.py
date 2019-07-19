@@ -87,15 +87,25 @@ WSGI_APPLICATION = 'AILab.wsgi.application'
 
 DATABASES = {
     'default': {
-	'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'ailabtest',
-    'USER': 'ailab',
-    'PASSWORD': 'ailab',
-    'OPTIONS': {'charset': 'utf8mb4'},
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR,'db.sqlite3'),
+        'TEST': {
+            'NAME': os.path.join(BASE_DIR,'testdb.sqlite3'),
+        }
     }
 }
 
 
+
+"""
+    'mysqldb': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ailabtest',
+        'USER': 'ailab',
+        'PASSWORD': 'ailab',
+        'OPTIONS': {'charset': 'utf8mb4'},
+    }
+"""
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
@@ -184,3 +194,4 @@ LOGGING = {
 
     }
 }
+

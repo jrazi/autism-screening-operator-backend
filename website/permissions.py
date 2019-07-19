@@ -1,6 +1,24 @@
 from rest_framework import permissions
 from time import time
 from AILab.settings import AUTH_TIME_DELTA as timeDelta
+from website import models, settings
+class AnyActiveSessions(permissions.BasePermission):
+    message = 'No user currently has an active session'
+
+    def has_permission(self, request, view):
+        return models.DiagnoseSession.check_active_session()
+
+    def has_object_permission(self, request, view, obj):
+       return self.has_permission(request,view)
+ 
+class AnyAtGameStage(permissions.BasePermission):
+    message = 'No user is currently at game stage'
+
+    def has_permission(self, request, view):
+        return models.Patient.current_patient().current_session().stage.name == settings.GAME_STAGE
+
+    def has_object_permission(self, request, view, obj):
+       return self.has_permission(request,view)
 
 
 class IsLogin(permissions.BasePermission):
@@ -14,29 +32,29 @@ class IsLogin(permissions.BasePermission):
 
 
 class NotStarted(permissions.BasePermission):
-    message = 'you can\'t start pregame at this stage'
+    message = 'you can\'t start game at this stage'
     permission_classes = (IsLogin, )
     def has_permission(self, request, view):
-        return request.user.stage == "NS"
+        return not request.user.check_session()
 
     def has_object_permission(self, request, view, obj):
        return self.has_permission(request,view)
 
-class StartedPreGame(permissions.BasePermission):
-    message = 'you\'re not started the pregame yet'
-    permission_classes = (NotStarted, )
+class StartedGame(permissions.BasePermission):
+    message = 'you\'re not started the game yet'
+    permission_classes = (IsLogin, )
     def has_permission(self, request, view):
-        return request.user.stage == "PG"
+        return request.user.check_session() and request.user.current_session().stage.name == settings.GAME_STAGE
 
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)
 
 
-class StartedWeel(permissions.BasePermission):
-    message = 'you\'re not started Weel yet'
-    permission_classes = (StartedPreGame, )
+class StartedWheel(permissions.BasePermission):
+    message = 'you\'re not started Wheel yet'
+    permission_classes = (IsLogin, )
     def has_permission(self, request, view):
-        return request.user.stage == "W"
+        return request.user.check_session() and request.user.current_session().stage.name == settings.WHEEL_STAGE
 
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)
@@ -45,9 +63,19 @@ class StartedWeel(permissions.BasePermission):
 class StartedParrot(permissions.BasePermission):
     message = 'you\'re not started parrot yet'
 
-    permission_classes = (StartedWeel, )
+    permission_classes = (IsLogin, )
     def has_permission(self, request, view):
-        return (request.user.stage == "P")
+        return request.user.check_session() and request.user.current_session().stage.name == settings.PARROT_STAGE
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
+class FinishedSession(permissions.BasePermission):
+    message = "You don\'t have a finished session"
+
+    permission_classes = (IsLogin, )
+    def has_permission(self, request, view):
+        return request.user.check_session() and request.user.current_session().stage.name == settings.DONE_STAGE
 
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)

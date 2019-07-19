@@ -2,7 +2,7 @@
 # Create your views here.
 from rest_framework import viewsets
 from rest_framework.decorators import list_route,detail_route
-from website import serializer,models
+from website import serializer,models, settings
 from website.permissions import *
 from website.authentication import PersonAuthentication
 from rest_framework import mixins
@@ -17,25 +17,6 @@ import datetime
 
 
 
-dir = expanduser("~") + '/Desktop/'
-def create_directories():
-    global dir
-    if not os.path.exists(dir + 'cabinet_db'):
-        os.makedirs(dir + 'cabinet_db')
-    dir = dir + 'cabinet_db/'
-
-
-def create_uid_directories(num):
-    time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
-
-    if not os.path.exists(dir + '%s'%num ):
-        os.makedirs(dir + '%s'%num )
-
-    if not os.path.exists(dir + '%s'%num + '/' + time):
-        os.makedirs(dir + '%s'%num + '/' + time)
-    print (dir + '%s'%num + '/' + time)
-    return str(dir + '%s'%num + '/' + time)
-
 
 # import rospy
 # from std_msgs.msg import String
@@ -48,6 +29,18 @@ def create_uid_directories(num):
 # rospy.init_node('web_logger', anonymous=False)
 # create_directories()
 
+dir = expanduser("~") + '/Desktop/'
+
+def create_uid_directories(num):
+    time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
+
+    if not os.path.exists(dir + '%s'%num ):
+        os.makedirs(dir + '%s'%num )
+
+    if not os.path.exists(dir + '%s'%num + '/' + time):
+        os.makedirs(dir + '%s'%num + '/' + time)
+    print (dir + '%s'%num + '/' + time)
+    return str(dir + '%s'%num + '/' + time)
 
 
 def create_patient_directory():
@@ -71,9 +64,9 @@ class UserProfileList(  mixins.RetrieveModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+        user.save()
 
     def get(self, request, *args, **kwargs):
-        print ('get-user')
         if request.user:
             return HttpResponse(json.dumps(self.serializer_class(instance = request.user).data), status=200,
                                 content_type='application/json; charset=utf8')
@@ -92,18 +85,27 @@ class UserProfileList(  mixins.RetrieveModelMixin,
             return HttpResponse(json.dumps({'errors': 'اول با حساب خود وارد شوید'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-class PreGameCommands(viewsets.GenericViewSet):
+class GameCommands(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
     permission_classes = (IsLogin,)
 
     @list_route(methods=['get'],permission_classes=[NotStarted]) #auth
     def start(self,request):
-        request.user.stage = "PG"
-        request.user.save()
+        if request.user.check_session():
+            return HttpResponse(json.dumps({'errors': 'تست دیگری در حال انجام است'}), status=400,
+                            content_type='application/json; charset=utf8')
+        request.user.start_session()
         return HttpResponse("", status=200,
                             content_type='application/json; charset=utf8')
 
-    @list_route(methods=['post'], permission_classes=[StartedPreGame])  # auth
+    @list_route(methods=['get'],permission_classes=[FinishedSession]) #auth
+    def reset(self, request):
+        request.user.end_session()
+        request.user.start_session()
+        return HttpResponse("", status=200,
+                            content_type='application/json; charset=utf8')
+
+    @list_route(methods=['post'], permission_classes=[StartedGame])  # auth
     def send_data(self, request):
         try:
             data = json.loads(codecs.decode(request.body, 'utf-8'))
@@ -111,6 +113,7 @@ class PreGameCommands(viewsets.GenericViewSet):
             game = data['game']
             system = data['system']
             print(car,game,system)
+            # TODO
             # do something with data            # do something with data
 
             return HttpResponse("", status=200,
@@ -119,19 +122,18 @@ class PreGameCommands(viewsets.GenericViewSet):
             return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-class WeelCommands(viewsets.GenericViewSet):
+class WheelCommands(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
     permission_classes = (IsLogin,)
 
 
-    @list_route(methods=['get'],permission_classes=[StartedPreGame]) #auth
+    @list_route(methods=['get'],permission_classes=[StartedGame]) #auth
     def start(self,request):
-        request.user.stage = "W"
-        request.user.save()
+        request.user.change_stage(settings.WHEEL_STAGE)
         return HttpResponse(json.dumps(""), status=200,
                             content_type='application/json; charset=utf8')
 
-    @list_route(methods=['post'], permission_classes=[StartedWeel])  # auth
+    @list_route(methods=['post'], permission_classes=[StartedWheel])  # auth
     def perform(self, request):
         try:
             data = json.loads(codecs.decode(request.body, 'utf-8'))
@@ -154,10 +156,9 @@ class ParrotCommands(viewsets.GenericViewSet):
 
 
 
-    @list_route(methods=['get'],permission_classes=[StartedWeel]) #auth
+    @list_route(methods=['get'],permission_classes=[StartedWheel]) #auth
     def start(self,request):
-        request.user.stage = "P"
-        request.user.save()
+        request.user.change_stage(settings.PARROT_STAGE)
         return HttpResponse(json.dumps(""), status=200,
                             content_type='application/json; charset=utf8')
 
@@ -200,12 +201,28 @@ class ParrotCommands(viewsets.GenericViewSet):
 
     @list_route(methods=['get'], permission_classes=[StartedParrot])  # auth
     def stop(self, request):
-        request.user.stage = "D"
-        request.user.save()
+        request.user.change_stage(settings.DONE_STAGE)
+        request.user.end_session()
         return HttpResponse(json.dumps(""), status=200,
                             content_type='application/json; charset=utf8')
 
+class ToyCarData(mixins.RetrieveModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.CreateModelMixin,
+                        viewsets.generics.GenericAPIView):
+    queryset = models.ToyCar.objects.all()
+    serializer_class = serializer.toycar_serializer
+    permission_classes = (AnyActiveSessions, AnyAtGameStage)
+    authentication_classes = ()
 
+        
+    def perform_create(self, serializer):
+        user_session = models.Patient.objects.get(login_status= True).current_session()
+        serializer.save(session= user_session)
+        
+    def post(self, request, *args, **kwargs):
+        t = self.create(request, *args, **kwargs)
+        return t
 
 
 
@@ -254,11 +271,11 @@ def obtain_token(request):
         another_user.save()
 
     token = generateToken(data)
-    if not user.login_status:
-        user.stage = "NS" 
     user.last_activity = time()    
     user.login_status = True
     user.save()
+    if user.check_session():
+        user.resume_session()
     # patient_uid.publish(str(user.id))
     # patient_uid_directories.publish('%s'%create_uid_directories(str(user.id)))
 
@@ -304,8 +321,9 @@ def remove_token(request):
         user = PersonAuthentication.authenticate(None, request)[0]
         user.login_status = False
         user.last_activity = time()
-        user.stage = "NS"
         user.save()
+        if user.check_session():
+            user.pause_session()
         return HttpResponse(json.dumps({"message": "logout complete"}), status=200,
                             content_type='application/json; charset=utf8')
 
