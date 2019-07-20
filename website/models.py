@@ -219,7 +219,9 @@ class DiagnoseSession(models.Model):
             t = Timer(self.stage.duration, self.auto_next_stage)
             t.daemon = True
             t.start()
-        else: self.expired = True
+        else: 
+            self.expired = True
+            self.save()
 
     @staticmethod
     def check_active_session():
@@ -240,8 +242,8 @@ class ToyCar(models.Model):
     encode1 = models.BigIntegerField(null= False)
     encode2 = models.BigIntegerField(null= False)
 
-    class Meta:
-        unique_together = ('session', 'time', )
+#    class Meta:
+#       unique_together = ('session', 'time', )
 
 
 class Game(models.Model):

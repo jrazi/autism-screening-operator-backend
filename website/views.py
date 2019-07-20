@@ -8,7 +8,7 @@ from website.authentication import PersonAuthentication
 from rest_framework import mixins
 import json
 from django.http import HttpResponse
-
+from django.db import IntegrityError
 import os
 from os.path import expanduser
 import datetime
@@ -219,9 +219,12 @@ class ToyCarData(mixins.RetrieveModelMixin,
         serializer.save(session= user_session)
         
     def post(self, request, *args, **kwargs):
-        t = self.create(request, *args, **kwargs)
-        return t
-
+        try:
+            t = self.create(request, *args, **kwargs)
+            return t
+        except IntegrityError:
+                return HttpResponse(json.dumps({'errors': 'Data for this timestamp were already sent'}), status=400,
+                                content_type='application/json; charset=utf8')
 
 class StageSetting(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication, )
