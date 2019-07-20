@@ -48,6 +48,8 @@ def create_patient_directory():
 
 
 
+from threading import Timer
+
 class UserProfileList(  mixins.RetrieveModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.CreateModelMixin,
@@ -90,17 +92,13 @@ class GameCommands(viewsets.GenericViewSet):
     permission_classes = (IsLogin,)
 
     @list_route(methods=['get'],permission_classes=[NotStarted]) #auth
-    def start(self,request):
-        if request.user.check_session():
-            return HttpResponse(json.dumps({'errors': 'تست دیگری در حال انجام است'}), status=400,
-                            content_type='application/json; charset=utf8')
+    def start(self,request):                         
         request.user.start_session()
         return HttpResponse("", status=200,
                             content_type='application/json; charset=utf8')
 
     @list_route(methods=['get'],permission_classes=[FinishedSession]) #auth
     def reset(self, request):
-        request.user.end_session()
         request.user.start_session()
         return HttpResponse("", status=200,
                             content_type='application/json; charset=utf8')
@@ -127,7 +125,7 @@ class WheelCommands(viewsets.GenericViewSet):
     permission_classes = (IsLogin,)
 
 
-    @list_route(methods=['get'],permission_classes=[StartedGame]) #auth
+    @list_route(methods=['get'],permission_classes=[StartedGame, ManualStageUpdate]) #auth
     def start(self,request):
         request.user.change_stage(settings.WHEEL_STAGE)
         return HttpResponse(json.dumps(""), status=200,
@@ -156,7 +154,7 @@ class ParrotCommands(viewsets.GenericViewSet):
 
 
 
-    @list_route(methods=['get'],permission_classes=[StartedWheel]) #auth
+    @list_route(methods=['get'],permission_classes=[StartedWheel, ManualStageUpdate]) #auth
     def start(self,request):
         request.user.change_stage(settings.PARROT_STAGE)
         return HttpResponse(json.dumps(""), status=200,
@@ -179,7 +177,7 @@ class ParrotCommands(viewsets.GenericViewSet):
                             content_type='application/json; charset=utf8')
 
 
-    @list_route(methods=['post'], permission_classes=[StartedParrot])  # auth
+    @list_route(methods=['post'], permission_classes=[StartedParrot, ManualStageUpdate])  # auth
     def perform(self, request):
         try:
             data = json.loads(codecs.decode(request.body, 'utf-8'))
@@ -199,7 +197,7 @@ class ParrotCommands(viewsets.GenericViewSet):
             return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-    @list_route(methods=['get'], permission_classes=[StartedParrot])  # auth
+    @list_route(methods=['get'], permission_classes=[StartedParrot, ManualStageUpdate])  # auth
     def stop(self, request):
         request.user.change_stage(settings.DONE_STAGE)
         request.user.end_session()
@@ -225,7 +223,26 @@ class ToyCarData(mixins.RetrieveModelMixin,
         return t
 
 
+class StageSetting(viewsets.GenericViewSet):
+    authentication_classes = (PersonAuthentication, )
+    permission_classes = (IsLogin, StartedSession, )
 
+    @list_route(methods=['put'],permission_classes=[]) #auth
+    def autoupdate(self,request):
+
+        try:
+            data = json.loads(codecs.decode(request.body, 'utf-8'))
+            status = data['autoupdate']
+            session = request.user.current_session()
+            session.stage.auto_update = status
+            session.stage.save()
+            return HttpResponse(json.dumps(""), status=200,
+                                content_type='application/json; charset=utf8')
+
+        except(ValueError, json.JSONDecodeError):
+            return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
+                                content_type='application/json; charset=utf8')
+    
 #####           __________________________________________  AUTH _____________________________________________
 
 

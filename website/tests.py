@@ -144,6 +144,7 @@ class SimpleTest(TestCase):
         random_data(toycar)
         self.car_data(toycar, 201)
 
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_wheel(self.tokens[P1['personID']], 200)
 
         self.stop_parrot(self.tokens[P1['personID']], 403)
@@ -152,6 +153,7 @@ class SimpleTest(TestCase):
 
         random_data(toycar)
         self.car_data(toycar, 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_parrot(self.tokens[P1['personID']], 200)
         
         self.start_wheel(self.tokens[P1['personID']], 403)
@@ -161,6 +163,7 @@ class SimpleTest(TestCase):
         random_data(toycar)
         self.car_data(toycar, 403)
 
+        self.autoupdate(self.tokens[P1['personID']], False, 200) 
         self.stop_parrot(self.tokens[P1['personID']], 200)
 
         self.start_wheel(self.tokens[P1['personID']], 403)
@@ -173,8 +176,11 @@ class SimpleTest(TestCase):
         # self.new_session(self.tokens[P1['personID']], 403)
         self.start_parrot(self.tokens[P1['personID']], 403)
         self.stop_parrot(self.tokens[P1['personID']], 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_wheel(self.tokens[P1['personID']], 200)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_parrot(self.tokens[P1['personID']], 200)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.stop_parrot(self.tokens[P1['personID']], 200)
 
 
@@ -261,6 +267,8 @@ class SimpleTest(TestCase):
         random_data(toycar)
         self.car_data(toycar, 201)
 
+        self.start_wheel(self.tokens[P1['personID']], 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_wheel(self.tokens[P1['personID']], 200)
 
         self.stop_parrot(self.tokens[P1['personID']], 403)
@@ -269,6 +277,8 @@ class SimpleTest(TestCase):
 
         random_data(toycar)
         self.car_data(toycar, 403)
+        self.start_parrot(self.tokens[P1['personID']], 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_parrot(self.tokens[P1['personID']], 200)
         
         self.start_wheel(self.tokens[P1['personID']], 403)
@@ -278,6 +288,9 @@ class SimpleTest(TestCase):
         random_data(toycar)
         self.car_data(toycar, 403)
 
+        self.autoupdate(self.tokens[P1['personID']], True, 200)
+        self.stop_parrot(self.tokens[P1['personID']], 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.stop_parrot(self.tokens[P1['personID']], 200)
 
         self.start_wheel(self.tokens[P1['personID']], 403)
@@ -290,8 +303,11 @@ class SimpleTest(TestCase):
         # self.new_session(self.tokens[P1['personID']], 403)
         self.start_parrot(self.tokens[P1['personID']], 403)
         self.stop_parrot(self.tokens[P1['personID']], 403)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_wheel(self.tokens[P1['personID']], 200)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.start_parrot(self.tokens[P1['personID']], 200)
+        self.autoupdate(self.tokens[P1['personID']], False, 200)
         self.stop_parrot(self.tokens[P1['personID']], 200)
 
         self.logout(self.tokens[P1['personID']], 200)
@@ -303,6 +319,7 @@ class SimpleTest(TestCase):
         random_data(toycar)
         self.car_data(toycar, 201)
 
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.start_wheel(self.tokens[P2['personID']], 200)
 
         self.stop_parrot(self.tokens[P2['personID']], 403)
@@ -311,6 +328,8 @@ class SimpleTest(TestCase):
 
         random_data(toycar)
         self.car_data(toycar, 403)
+        self.start_parrot(self.tokens[P2['personID']], 403)
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.start_parrot(self.tokens[P2['personID']], 200)
         
         self.start_wheel(self.tokens[P2['personID']], 403)
@@ -319,7 +338,7 @@ class SimpleTest(TestCase):
 
         random_data(toycar)
         self.car_data(toycar, 403)
-
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.stop_parrot(self.tokens[P2['personID']], 200)
 
         self.start_wheel(self.tokens[P2['personID']], 403)
@@ -332,8 +351,11 @@ class SimpleTest(TestCase):
         # self.new_session(self.tokens[P2['personID']], 403)
         self.start_parrot(self.tokens[P2['personID']], 403)
         self.stop_parrot(self.tokens[P2['personID']], 403)
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.start_wheel(self.tokens[P2['personID']], 200)
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.start_parrot(self.tokens[P2['personID']], 200)
+        self.autoupdate(self.tokens[P2['personID']], False, 200)
         self.stop_parrot(self.tokens[P2['personID']], 200)
 
 
@@ -375,4 +397,9 @@ class SimpleTest(TestCase):
 
     def signup(self, body, expected_status):
         response = self.client.post('/api/user/', body)
+        self.assertEqual(response.status_code, expected_status)
+
+    def autoupdate(self, token, autoupdate, expected_status):
+        body = {'autoupdate': autoupdate}
+        response = self.client.generic('PUT', '/api/stage/autoupdate/', HTTP_TOKEN= token, data= json.dumps(body))
         self.assertEqual(response.status_code, expected_status)

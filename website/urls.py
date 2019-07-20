@@ -8,6 +8,7 @@ router = SimpleRouter()
 router.register('eval/game',views.GameCommands,'Game')
 router.register('eval/wheel',views.WheelCommands,'Wheel')
 router.register('eval/parrot',views.ParrotCommands,'Parrot')
+router.register('stage', views.StageSetting, 'StageSetting')
 # router.register('eval/toycar', views.ToyCarData, 'ToyCar')
 
 urlpatterns = [

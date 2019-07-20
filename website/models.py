@@ -5,6 +5,7 @@ from time import time
 from website import myexceptions
 from django.core.exceptions import ValidationError
 from website import settings
+from threading import Timer
 def getTime():
     return time()
 
@@ -112,7 +113,12 @@ class Patient(models.Model):
     def start_session(self):
         now = time()
         default_stage = Stage.objects.create(start_time= now, duration= Duration.get().game_duration(), name= settings.GAME_STAGE)
-        DiagnoseSession.objects.create(patient= self, start_time= now, stage= default_stage)
+        started_session = DiagnoseSession.objects.create(patient= self, start_time= now, stage= default_stage)
+
+        t = Timer(default_stage.duration, started_session.auto_next_stage)
+        t.daemon = True
+        t.start()
+
   
     def end_session(self):
         current_session = self.current_session()
@@ -128,6 +134,9 @@ class Patient(models.Model):
         current_session = self.current_session()
         current_session.paused = False
         current_session.save()
+        t = Timer(current_session.stage.duration, current_session.auto_next_stage)
+        t.daemon = True
+        t.start()
         
     # TODO Save session duration when user logs out
     # TODO Expire session when its done
@@ -139,6 +148,7 @@ class Patient(models.Model):
 
     def change_stage(self, new_stage):
         self.current_session().change_stage(new_stage)
+
 
     @staticmethod
     def current_patient():
@@ -156,6 +166,7 @@ class Stage(models.Model):
     )
     name = models.CharField(choices=stages,max_length=2, default= settings.NOT_STARTED_STAGE)
     expired = models.BooleanField(null= False, default= False)
+    auto_update = models.BooleanField(default= True)
 
     def renew(self):
         if self.expired:
@@ -196,8 +207,19 @@ class DiagnoseSession(models.Model):
         self.stage.duration= Duration.get().stage_duration(new_stage)
         self.stage.name= new_stage
         self.stage.expired = False
+        self.stage.auto_update = True
         self.stage.save()   
         self.save()
+
+    def auto_next_stage(self):
+        if not self.stage.auto_update or self.paused:
+            return
+        self.change_stage(settings.NEXT_STAGE[self.stage.name])
+        if self.stage.name != settings.DONE_STAGE:
+            t = Timer(self.stage.duration, self.auto_next_stage)
+            t.daemon = True
+            t.start()
+        else: self.expired = True
 
     @staticmethod
     def check_active_session():
@@ -211,12 +233,15 @@ class DiagnoseSession(models.Model):
 
 class ToyCar(models.Model):
     session = models.ForeignKey(DiagnoseSession, on_delete=models.CASCADE)
-    time = models.BigIntegerField(null= False, unique= True)
+    time = models.BigIntegerField(null= False)
     ac_x = models.BigIntegerField(null= False)
     ac_y = models.BigIntegerField(null= False)
     ac_z = models.BigIntegerField(null= False)
     encode1 = models.BigIntegerField(null= False)
     encode2 = models.BigIntegerField(null= False)
+
+    class Meta:
+        unique_together = ('session', 'time', )
 
 
 class Game(models.Model):

@@ -30,7 +30,15 @@ class IsLogin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
        return self.has_permission(request,view)
 
+class StartedSession(permissions.BasePermission):
+    message = 'You don\'t have any active sessions'
+    permission_classes = (IsLogin, )
+    def has_permission(self, request, view):
+        return request.user.check_session()
 
+    def has_object_permission(self, request, view, obj):
+       return self.has_permission(request,view)
+       
 class NotStarted(permissions.BasePermission):
     message = 'you can\'t start game at this stage'
     permission_classes = (IsLogin, )
@@ -76,6 +84,16 @@ class FinishedSession(permissions.BasePermission):
     permission_classes = (IsLogin, )
     def has_permission(self, request, view):
         return request.user.check_session() and request.user.current_session().stage.name == settings.DONE_STAGE
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
+
+class ManualStageUpdate(permissions.BasePermission):
+    message = "Stage update mode is set to auto."
+
+    def has_permission(self, request, view):
+        return not request.user.current_session().stage.auto_update
 
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)
