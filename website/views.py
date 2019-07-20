@@ -66,8 +66,6 @@ class UserProfileList(  mixins.RetrieveModelMixin,
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-        user.save()
-
     def get(self, request, *args, **kwargs):
         if request.user:
             return HttpResponse(json.dumps(self.serializer_class(instance = request.user).data), status=200,
@@ -87,6 +85,22 @@ class UserProfileList(  mixins.RetrieveModelMixin,
             return HttpResponse(json.dumps({'errors': 'اول با حساب خود وارد شوید'}), status=400,
                                 content_type='application/json; charset=utf8')
 
+class Session(viewsets.GenericViewSet):
+    authentication_classes = (PersonAuthentication,)
+    permission_classes = (IsLogin,)
+
+    @list_route(methods=['get'],permission_classes=[NotStarted]) #auth
+    def start(self,request):                         
+        request.user.start_session()
+        return HttpResponse("", status=200,
+                            content_type='application/json; charset=utf8')
+    
+    @list_route(methods=['get'],permission_classes=[StartedSession]) #auth
+    def stop(self,request):                         
+        request.user.end_session()
+        return HttpResponse("", status=200,
+                            content_type='application/json; charset=utf8')
+                            
 class GameCommands(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
     permission_classes = (IsLogin,)
@@ -97,11 +111,6 @@ class GameCommands(viewsets.GenericViewSet):
         return HttpResponse("", status=200,
                             content_type='application/json; charset=utf8')
 
-    @list_route(methods=['get'],permission_classes=[FinishedSession]) #auth
-    def reset(self, request):
-        request.user.start_session()
-        return HttpResponse("", status=200,
-                            content_type='application/json; charset=utf8')
 
     @list_route(methods=['post'], permission_classes=[StartedGame])  # auth
     def send_data(self, request):
@@ -220,9 +229,8 @@ class ToyCarData(mixins.RetrieveModelMixin,
         
     def post(self, request, *args, **kwargs):
         try:
-            t = self.create(request, *args, **kwargs)
-            return t
-        except IntegrityError:
+            return self.create(request, *args, **kwargs)
+        except IntegrityError: 
                 return HttpResponse(json.dumps({'errors': 'Data for this timestamp were already sent'}), status=400,
                                 content_type='application/json; charset=utf8')
 

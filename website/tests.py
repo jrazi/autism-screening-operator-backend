@@ -360,27 +360,23 @@ class SimpleTest(TestCase):
 
 
     def start_game(self, token, expected_status):
-        response = self.client.generic('GET', '/api/eval/game/start/', HTTP_TOKEN = token)
+        response = self.client.generic('GET', '/api/stage/game/start/', HTTP_TOKEN = token)
         self.assertEqual(response.status_code, expected_status)
 
     def start_wheel(self, token, expected_status):
-        response = self.client.generic('GET', '/api/eval/wheel/start/', HTTP_TOKEN = token)
+        response = self.client.generic('GET', '/api/stage/wheel/start/', HTTP_TOKEN = token)
         self.assertEqual(response.status_code, expected_status)
 
     def start_parrot(self, token, expected_status):
-        response = self.client.generic('GET', '/api/eval/parrot/start/', HTTP_TOKEN = token)
+        response = self.client.generic('GET', '/api/stage/parrot/start/', HTTP_TOKEN = token)
         self.assertEqual(response.status_code, expected_status)
     
     def stop_parrot(self, token, expected_status):
-        response = self.client.generic('GET', '/api/eval/parrot/stop/', HTTP_TOKEN = token)
+        response = self.client.generic('GET', '/api/stage/parrot/stop/', HTTP_TOKEN = token)
         self.assertEqual(response.status_code, expected_status)
 
     def car_data(self, data, expected_status):
-        response = self.client.generic('POST', '/api/eval/toycar', content_type='application/json', data= json.dumps(data))
-        self.assertEqual(response.status_code, expected_status)
-
-    def new_session(self, token, expected_status):
-        response = self.client.generic('POST', '/api/eval/game/reset/', HTTP_TOKEN = token)
+        response = self.client.generic('POST', '/api/toycar', content_type='application/json', data= json.dumps(data))
         self.assertEqual(response.status_code, expected_status)
 
 
