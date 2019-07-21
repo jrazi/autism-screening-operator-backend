@@ -1,6 +1,5 @@
-website/migrations/*
 staticRoot/*
-.idea/
+.idea/*
 *.pyc
 *.log
 *.sqlite3
