@@ -4,8 +4,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route,detail_route
 from website import serializer,models, settings
 from website.permissions import *
+from website.settings import ros  
 from website.authentication import PersonAuthentication
-from website.settings import ros
 from rest_framework import mixins
 import json
 from django.http import HttpResponse
@@ -13,9 +13,6 @@ from django.db import IntegrityError
 import os
 from os.path import expanduser
 import datetime
-
-
-
 
 
 
@@ -29,7 +26,6 @@ import datetime
 # patient_uid_directories = rospy.Publisher('web/patient_uid/dir', String, queue_size=10)
 # rospy.init_node('web_logger', anonymous=False)
 # create_directories()
-
 dir = expanduser("~") + '/Desktop/cabinet_db/'
 
 def create_uid_directories(num, _time):
@@ -128,7 +124,7 @@ class StageView(viewsets.GenericViewSet):
     @list_route(methods=['get']) #auth
     def status(self,request):                         
         stage = request.user.current_session().stage
-
+        import rospy
         return HttpResponse(json.dumps(self.serializer_class(instance = stage).data), status=200,
                             content_type='application/json; charset=utf8')
 
