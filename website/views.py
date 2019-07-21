@@ -5,6 +5,7 @@ from rest_framework.decorators import list_route,detail_route
 from website import serializer,models, settings
 from website.permissions import *
 from website.authentication import PersonAuthentication
+from website.settings import ros
 from rest_framework import mixins
 import json
 from django.http import HttpResponse
@@ -29,18 +30,17 @@ import datetime
 # rospy.init_node('web_logger', anonymous=False)
 # create_directories()
 
-dir = expanduser("~") + '/Desktop/'
+dir = expanduser("~") + '/Desktop/cabinet_db/'
 
-def create_uid_directories(num):
-    time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
+def create_uid_directories(num, _time):
+#    time = datetime.datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
 
     if not os.path.exists(dir + '%s'%num ):
         os.makedirs(dir + '%s'%num )
 
-    if not os.path.exists(dir + '%s'%num + '/' + time):
-        os.makedirs(dir + '%s'%num + '/' + time)
-    print (dir + '%s'%num + '/' + time)
-    return str(dir + '%s'%num + '/' + time)
+    if not os.path.exists(dir + '%s'%num + '/' + _time):
+        os.makedirs(dir + '%s'%num + '/' + _time)
+    return str(dir + '%s'%num + '/' + _time)
 
 
 def create_patient_directory():
@@ -85,14 +85,17 @@ class UserProfileList(  mixins.RetrieveModelMixin,
             return HttpResponse(json.dumps({'errors': 'اول با حساب خود وارد شوید'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-class Session(viewsets.GenericViewSet):
+class SessionView(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
     permission_classes = (IsLogin,)
 
     @list_route(methods=['get'],permission_classes=[NotStarted]) #auth
-    def start(self,request):                         
-        request.user.start_session()
-        return HttpResponse("", status=200,
+    def start(self,request):       
+        session = request.user.start_session()
+        ros.patient_uid.publish(str(request.user.id))
+        ros.patient_uid_directories.publish('%s'%create_uid_directories(str(request.user.id), str(session.start_time)))
+
+        return HttpResponse(json.dumps({'starttime': session.stage.start_time, 'duration': session.stage.duration}), status=200,
                             content_type='application/json; charset=utf8')
     
     @list_route(methods=['get'],permission_classes=[StartedSession]) #auth
@@ -101,16 +104,49 @@ class Session(viewsets.GenericViewSet):
         return HttpResponse("", status=200,
                             content_type='application/json; charset=utf8')
                             
+class StageView(viewsets.GenericViewSet):
+    authentication_classes = (PersonAuthentication, )
+    permission_classes = (IsLogin, StartedSession, )
+    serializer_class = serializer.stage_serializer
+
+    @list_route(methods=['put']) #auth
+    def autoupdate(self,request):
+
+        try:
+            data = json.loads(codecs.decode(request.body, 'utf-8'))
+            status = data['autoupdate']
+            session = request.user.current_session()
+            session.stage.auto_update = status
+            session.stage.save()
+            return HttpResponse(json.dumps(""), status=200,
+                                content_type='application/json; charset=utf8')
+
+        except(ValueError, json.JSONDecodeError):
+            return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
+                                content_type='application/json; charset=utf8')
+
+    @list_route(methods=['get']) #auth
+    def status(self,request):                         
+        stage = request.user.current_session().stage
+
+        return HttpResponse(json.dumps(self.serializer_class(instance = stage).data), status=200,
+                            content_type='application/json; charset=utf8')
+
 class GameCommands(viewsets.GenericViewSet):
     authentication_classes = (PersonAuthentication,)
     permission_classes = (IsLogin,)
 
     @list_route(methods=['get'],permission_classes=[NotStarted]) #auth
     def start(self,request):                         
-        request.user.start_session()
-        return HttpResponse("", status=200,
+        session = request.user.start_session()
+        ros.patient_uid.publish(str(request.user.id))
+        ros.patient_uid_directories.publish('%s'%create_uid_directories(str(request.user.id), str(session.start_time)))
+
+        return HttpResponse(json.dumps({'starttime': session.stage.start_time, 'duration': session.stage.duration}), status=200,
                             content_type='application/json; charset=utf8')
 
+
+ 
 
     @list_route(methods=['post'], permission_classes=[StartedGame])  # auth
     def send_data(self, request):
@@ -137,7 +173,8 @@ class WheelCommands(viewsets.GenericViewSet):
     @list_route(methods=['get'],permission_classes=[StartedGame, ManualStageUpdate]) #auth
     def start(self,request):
         request.user.change_stage(settings.WHEEL_STAGE)
-        return HttpResponse(json.dumps(""), status=200,
+        session = request.user.current_session()
+        return HttpResponse(json.dumps({'starttime': session.stage.start_time, 'duration': session.stage.duration}), status=200,
                             content_type='application/json; charset=utf8')
 
     @list_route(methods=['post'], permission_classes=[StartedWheel])  # auth
@@ -145,8 +182,8 @@ class WheelCommands(viewsets.GenericViewSet):
         try:
             data = json.loads(codecs.decode(request.body, 'utf-8'))
             status = data['status']
-            print(status)
-            # do something with data
+            ros.wheel_status.publish(str(status))
+            # TODO 
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
         except(ValueError, json.JSONDecodeError):
@@ -166,7 +203,8 @@ class ParrotCommands(viewsets.GenericViewSet):
     @list_route(methods=['get'],permission_classes=[StartedWheel, ManualStageUpdate]) #auth
     def start(self,request):
         request.user.change_stage(settings.PARROT_STAGE)
-        return HttpResponse(json.dumps(""), status=200,
+        session = request.user.current_session()
+        return HttpResponse(json.dumps({'starttime': session.stage.start_time, 'duration': session.stage.duration}), status=200,
                             content_type='application/json; charset=utf8')
 
     @list_route(methods=['get'], permission_classes=[StartedParrot])  # auth
@@ -192,13 +230,12 @@ class ParrotCommands(viewsets.GenericViewSet):
             data = json.loads(codecs.decode(request.body, 'utf-8'))
             commandID = data['commandID']
             command = self.queryset.get(pk=commandID)
-            # parrot_command_name.publish(str(command.name))
+            ros.parrot_command_name.publish(str(command.name))
             if (command.isVoice):
-                # parrot_voice_commands.publish(command.voiceFile.path)
-                print(command.voiceFile.path)
+                ros.parrot_voice_commands.publish(command.voiceFile.path)
             else:
-                # parrot_command.publish(str(command.arg))
-                print(command.arg)
+                ros.parrot_command.publish(str(command.arg))
+            # TODO 
             # do something with data
             return HttpResponse("", status=200,
                                 content_type='application/json; charset=utf8')
@@ -234,25 +271,7 @@ class ToyCarData(mixins.RetrieveModelMixin,
                 return HttpResponse(json.dumps({'errors': 'Data for this timestamp were already sent'}), status=400,
                                 content_type='application/json; charset=utf8')
 
-class StageSetting(viewsets.GenericViewSet):
-    authentication_classes = (PersonAuthentication, )
-    permission_classes = (IsLogin, StartedSession, )
 
-    @list_route(methods=['put'],permission_classes=[]) #auth
-    def autoupdate(self,request):
-
-        try:
-            data = json.loads(codecs.decode(request.body, 'utf-8'))
-            status = data['autoupdate']
-            session = request.user.current_session()
-            session.stage.auto_update = status
-            session.stage.save()
-            return HttpResponse(json.dumps(""), status=200,
-                                content_type='application/json; charset=utf8')
-
-        except(ValueError, json.JSONDecodeError):
-            return HttpResponse(json.dumps({'errors': 'ورودی نادرست'}), status=400,
-                                content_type='application/json; charset=utf8')
     
 #####           __________________________________________  AUTH _____________________________________________
 
@@ -321,26 +340,6 @@ def verify_token(request):
     
     except exceptions.AuthenticationFailed as e: 
         return HttpResponse(json.dumps({"errors": str(e)}), status=400, content_type='application/json; charset=utf8')
-
-
-"""
-    try:
-        token = request.META.get('HTTP_TOKEN')
-        data = decode_and_check_auth_token(token)
-        user = Patient.objects.get(id = data['id'])
-    except:
-        return HttpResponse(status=400, content_type='application/json; charset=utf8')
-    if user.login_status == True and user.last_activity + timeDelta > time():
-        user.last_activity = time()
-        user.save()
-        return HttpResponse(status=200, content_type='application/json; charset=utf8')
-    elif user.login_status == True:
-        user.login_status = False
-        user.save()
-        return HttpResponse(status=400, content_type='application/json; charset=utf8')
-"""
-
-
 
 
 @csrf_exempt

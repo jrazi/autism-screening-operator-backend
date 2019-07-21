@@ -17,3 +17,8 @@ class toycar_serializer(serializers.ModelSerializer):
     class Meta:
         model = models.ToyCar
         fields = ('time', 'ac_x', 'ac_y', 'ac_z', 'encode1', 'encode2')
+
+class stage_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Stage
+        fields = ('name', 'start_time', 'duration', 'auto_update')

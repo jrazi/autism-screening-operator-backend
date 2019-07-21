@@ -111,13 +111,14 @@ class Patient(models.Model):
         return True
 
     def start_session(self):
-        now = time()
+        now = int(time())
         default_stage = Stage.objects.create(start_time= now, duration= Duration.get().game_duration(), name= settings.GAME_STAGE)
         started_session = DiagnoseSession.objects.create(patient= self, start_time= now, stage= default_stage)
 
         t = Timer(default_stage.duration, started_session.auto_next_stage)
         t.daemon = True
         t.start()
+        return started_session
 
   
     def end_session(self):
@@ -195,7 +196,7 @@ class DiagnoseSession(models.Model):
         ('اتیسم به احتمال قوی', 'اتیسم به احتمال قوی'),
         ('اتیسم به احتمال ضعیف', 'اتیسم به احتمال قوی'),
         ('عدم تشخیص اتیسم', 'اتیسم به احتمال قوی'),
-        ('اعلام نشده', 'اعلام نشده')
+        ('NA', 'NA')
     )
     expertsystem_judgement = models.CharField(choices= diagnose_result, max_length= 64, default= diagnose_result[3][0])
 
@@ -203,7 +204,7 @@ class DiagnoseSession(models.Model):
     expired = models.BooleanField(default= False)
 
     def change_stage(self, new_stage):
-        self.stage.start_time = time()
+        self.stage.start_time = int(time())
         self.stage.duration= Duration.get().stage_duration(new_stage)
         self.stage.name= new_stage
         self.stage.expired = False
@@ -212,7 +213,7 @@ class DiagnoseSession(models.Model):
         self.save()
 
     def auto_next_stage(self):
-        if not self.stage.auto_update or self.paused:
+        if not self.stage.auto_update or self.paused or self.expired:
             return
         self.change_stage(settings.NEXT_STAGE[self.stage.name])
         if self.stage.name != settings.DONE_STAGE:
