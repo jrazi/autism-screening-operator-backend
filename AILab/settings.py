@@ -158,6 +158,8 @@ MEDIA_URL = '/media/'
 
 APPEND_SLASH=False
 
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 LOGGING = {
     'version': 1,

@@ -1,9 +1,6 @@
-db.sqlite3
 website/migrations/*
 staticRoot/*
 .idea/
 *.pyc
-todo.txt
-todo.*
 *.log
-.todo.*
+*.sqlite3
